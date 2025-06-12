@@ -5,7 +5,14 @@ import {sidebarItems} from "../../data/sidebarItems.ts";
 import {Outlet} from "react-router-dom";
 
 const MainLayout = () => {
-  const [expanded, setExpanded] = React.useState(true)
+  const [expanded, setExpanded] = React.useState(() => {
+    const stored = localStorage.getItem("sidebar-expanded");
+    return stored ? JSON.parse(stored) : true;
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("sidebar-expanded", JSON.stringify(expanded));
+  }, [expanded]);
   return (
     <>
       <Navbar />
