@@ -14,9 +14,9 @@ const MainLayout = () => {
     localStorage.setItem("sidebar-expanded", JSON.stringify(expanded));
   }, [expanded]);
   return (
-    <>
+    <div>
       <Navbar />
-      <div className="flex">
+      <div className="h-[calc(100vh-4rem)] flex">
         <Sidebar expanded={expanded} setExpanded={setExpanded}>
           {sidebarItems.map((item) => (
             <SidebarItem
@@ -28,11 +28,11 @@ const MainLayout = () => {
           ))}
         </Sidebar>
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4">
           <Outlet />
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

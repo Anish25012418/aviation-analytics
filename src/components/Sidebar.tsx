@@ -18,7 +18,7 @@ const SidebarContext = React.createContext<SidebarContextType | undefined>(undef
 const Sidebar = ({ children, expanded, setExpanded }: SidebarProps) => {
 
   return (
-    <aside className={`h-screen ${expanded ? "max-w-60" : "max-w-18"} mt-0.5 border-r-gray-900 shadow-sm`}>
+    <aside className={`${expanded ? "max-w-60" : "max-w-18"} mt-0.5 border-r-gray-900 shadow-sm`}>
       <nav className="h-full flex flex-col bg-white ">
         <div className="p-3 pb-2 flex justify-between items-center">
           {expanded && (
@@ -90,7 +90,7 @@ export const SidebarItem = ({icon: Icon, text, path}: {
           absolute left-full rounded-md px-2 py-1 ml-6
           bg-indigo-100 text-indigo-800 text-sm
           invisible opacity-20 -translate-x-3 transition-all
-          group-hover:visible group-hover:opacity-100 group-hover:translate-x-0
+          group-hover:visible group-hover:opacity-100 group-hover:translate-x-0 z-50
       `}
         >
           {text}
