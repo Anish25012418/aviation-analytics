@@ -8,6 +8,7 @@ import type {Flight} from "../types/flight.ts";
 import {AutocompleteInput} from "../components/input/AutocompleteInput.tsx";
 import {Loader} from "lucide-react";
 import {useNavigate} from "react-router-dom";
+import {formatDateTime} from "../utility/functions.ts";
 
 const FlightsPage = () => {
   const flights = useAppSelector(state => state.flights.flights);
@@ -28,30 +29,20 @@ const FlightsPage = () => {
     status: "",
   });
 
+  //implementing pagination
   const [currentPage, setCurrentPage] = useState(1);
 
-  const flightsPerPage = 10;
+  const flightsPerPage = 10; //10 data per page
 
-  const indexOfLastFlight = currentPage * flightsPerPage;
-  const indexOfFirstFlight = indexOfLastFlight - flightsPerPage;
-  const currentFlights = allFilteredFlights.slice(indexOfFirstFlight, indexOfLastFlight);
+  const indexOfLastFlight = currentPage * flightsPerPage; //finding last index of that page
+  const indexOfFirstFlight = indexOfLastFlight - flightsPerPage; //finding first index of that page
+  const currentFlights = allFilteredFlights.slice(indexOfFirstFlight, indexOfLastFlight); //retrieving the data between first and last index calculated above
 
-  const totalPages = Math.ceil(allFilteredFlights.length / flightsPerPage);
+  const totalPages = Math.ceil(allFilteredFlights.length / flightsPerPage); //Calculation total number of pages
 
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const formatDateTime = (dateString: string | null | undefined) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "N/A";
-
-    return new Intl.DateTimeFormat("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(date);
   };
 
   useEffect(() => {
@@ -79,6 +70,7 @@ const FlightsPage = () => {
     setFilters((prevState) => ({...prevState, [name]: value}));
   }
 
+  //applying filters acc to input
   const applyFilters = () => {
     const result = flights.filter(flight => {
       return (
