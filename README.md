@@ -1,6 +1,7 @@
 This is a live flight data application created in React 18.2.0 and hosted on https://flight-analytics.netlify.app/
 
 Local Setup: 
+
 First clone the repo and run "npm install" command
 
 Then head to https://aviationstack.com/ and register
