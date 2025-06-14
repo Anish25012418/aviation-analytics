@@ -3,19 +3,37 @@ import {doGetAirports} from "../store/airportSlice.ts";
 import {useAppDispatch, useAppSelector} from "../hooks/store/hooks.ts";
 import {doGetAirlines} from "../store/airlinesSlice.ts";
 import {doGetFlights} from "../store/flightSlice.ts";
+import type {SearchParams} from "../types/searchParams.ts";
+import type {Flight} from "../types/flight.ts";
+import {AutocompleteInput} from "../components/input/AutocompleteInput.tsx";
 
 const FlightsPage = () => {
   const flights = useAppSelector(state => state.flights.flights);
+  const airports = useAppSelector(state => state.airports.airports);
+  const airlines = useAppSelector(state => state.airlines.airlines);
   const dispatch = useAppDispatch();
 
+  const [allFilteredFlights, setAllFilteredFlights] = useState<Flight[]>([]);
+
+  const [filters, setFilters] = useState<SearchParams>({
+    date: "",
+    dept_airport: "",
+    arr_airport: "",
+    airline: "",
+    flight_no: "",
+    status: "",
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
+
   const flightsPerPage = 10;
 
   const indexOfLastFlight = currentPage * flightsPerPage;
   const indexOfFirstFlight = indexOfLastFlight - flightsPerPage;
-  const currentFlights = flights.slice(indexOfFirstFlight, indexOfLastFlight);
+  const currentFlights = allFilteredFlights.slice(indexOfFirstFlight, indexOfLastFlight);
 
-  const totalPages = Math.ceil(flights.length / flightsPerPage);
+  const totalPages = Math.ceil(allFilteredFlights.length / flightsPerPage);
+
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -35,12 +53,115 @@ const FlightsPage = () => {
   useEffect(() => {
     dispatch(doGetAirports());
     dispatch(doGetAirlines());
-    dispatch(doGetFlights())
-  }, []);
+    dispatch(doGetFlights());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setAllFilteredFlights(flights);
+  }, [flights]);
+
+  const handleFilterChange = (name: string, value: string) => {
+    setFilters((prevState) => ({...prevState, [name]: value}));
+  }
+
+  const applyFilters = () => {
+    const result = flights.filter(flight => {
+      return (
+        (!filters.date || flight.flight_date === filters.date) &&
+        (!filters.flight_no || flight.flight.iata?.toLowerCase().includes(filters.flight_no.toLowerCase())) &&
+        (!filters.dept_airport || flight.departure.airport === filters.dept_airport) &&
+        (!filters.arr_airport || flight.arrival.airport === filters.arr_airport) &&
+        (!filters.airline || flight.airline.name === filters.airline) &&
+        (!filters.status || flight.flight_status === filters.status)
+      );
+    });
+
+    setAllFilteredFlights(result);
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      date: "",
+      dept_airport: "",
+      arr_airport: "",
+      airline: "",
+      flight_no: "",
+      status: "",
+    })
+    setAllFilteredFlights(flights);
+    setCurrentPage(1);
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">Flights Data</h1>
+
+      <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-8 lg:grid-cols-8 gap-4">
+
+          <input
+            type="date"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={filters.date ?? ""}
+            onChange={(e) => handleFilterChange("date", e.target.value)}
+          />
+
+
+          <AutocompleteInput
+            placeholder="Select dept airport"
+            value={filters.dept_airport ?? ""}
+            onChange={(val) => handleFilterChange("dept_airport", val)}
+            options={airports.map(a => a.airport_name)}
+          />
+
+
+          <AutocompleteInput
+            placeholder="Select arr airport"
+            value={filters.arr_airport ?? ""}
+            onChange={(val) => handleFilterChange("arr_airport", val)}
+            options={airports.map(a => a.airport_name)}
+          />
+
+          <AutocompleteInput
+            placeholder="Select airline"
+            value={filters.airline ?? ""}
+            onChange={(val) => handleFilterChange("airline", val)}
+            options={airlines.map(a => a.airline_name)}
+          />
+
+          <input
+            type="text"
+            placeholder="Flight No."
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={filters.flight_no ?? ""}
+            onChange={(e) => handleFilterChange("flight_no", e.target.value)}
+          />
+
+          <select
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={filters.status}
+            onChange={(e) => handleFilterChange("status", e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="active">In-Air</option>
+            <option value="landed">Landed</option>
+          </select>
+
+          <button onClick={applyFilters}
+                  className="px-5 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm cursor-pointer">
+            Search
+          </button>
+
+          <button onClick={clearFilters}
+                  className="px-5 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition text-sm cursor-pointer">
+            Clear
+          </button>
+
+        </div>
+
+      </div>
 
       <div className="overflow-x-auto rounded-lg shadow">
         <table className="min-w-full table-fixed border border-gray-200">
@@ -62,32 +183,36 @@ const FlightsPage = () => {
               <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{flight.flight.iata ?? "N/A"}</td>
               <td className="p-3 text-sm text-gray-700 whitespace-nowrap leading-5">
                 {flight.departure.airport ?? "N/A"}
-                <br />
+                <br/>
                 <span className="text-xs text-gray-500">SCH: {formatDateTime(flight.departure.scheduled)}</span>
-                <br />
+                <br/>
                 <span className="text-xs text-gray-500">EST: {formatDateTime(flight.departure.estimated)}</span>
-                <br />
+                <br/>
                 <span className="text-xs text-gray-500">ACT: {formatDateTime(flight.departure.actual)}</span>
               </td>
 
               <td className="p-3 text-sm text-gray-700 whitespace-nowrap leading-5">
                 {flight.arrival.airport ?? "N/A"}
-                <br />
+                <br/>
                 <span className="text-xs text-gray-500">SCH: {formatDateTime(flight.arrival.scheduled)}</span>
-                <br />
+                <br/>
                 <span className="text-xs text-gray-500">EST: {formatDateTime(flight.arrival.estimated)}</span>
-                <br />
+                <br/>
                 <span className="text-xs text-gray-500">ACT: {formatDateTime(flight.arrival.actual)}</span>
               </td>
               <td className="p-3 text-sm text-gray-700 whitespace-nowrap capitalize">
                 {flight.flight_status === "" || !flight.flight_status ? (
-                  <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-gray-800 bg-gray-200 rounded-lg bg-opacity-50">N/A</span>
+                  <span
+                    className="p-1.5 text-xs font-medium uppercase tracking-wider text-gray-800 bg-gray-200 rounded-lg bg-opacity-50">N/A</span>
                 ) : flight.flight_status === "landed" ? (
-                  <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-green-800 bg-green-200 rounded-lg bg-opacity-50">Landed</span>
+                  <span
+                    className="p-1.5 text-xs font-medium uppercase tracking-wider text-green-800 bg-green-200 rounded-lg bg-opacity-50">Landed</span>
                 ) : flight.flight_status === "scheduled" ? (
-                  <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-indigo-800 bg-indigo-200 rounded-lg bg-opacity-50">Scheduled</span>
+                  <span
+                    className="p-1.5 text-xs font-medium uppercase tracking-wider text-indigo-800 bg-indigo-200 rounded-lg bg-opacity-50">Scheduled</span>
                 ) : (
-                  <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-yellow-800 bg-yellow-200 rounded-lg bg-opacity-50">In-Air</span>
+                  <span
+                    className="p-1.5 text-xs font-medium uppercase tracking-wider text-yellow-800 bg-yellow-200 rounded-lg bg-opacity-50">In-Air</span>
                 )}
               </td>
             </tr>
@@ -98,7 +223,7 @@ const FlightsPage = () => {
 
       {/* Pagination */}
       <div className="flex justify-center mt-6 space-x-1">
-        {Array.from({ length: totalPages }, (_, index) => {
+        {Array.from({length: totalPages}, (_, index) => {
           const page = index + 1;
           const isActive = currentPage === page;
 
