@@ -16,7 +16,7 @@ const MainLayout = () => {
   return (
     <div>
       <Navbar />
-      <div className="h-[calc(100vh-4rem)] flex">
+      <div className="h-full flex">
         <Sidebar expanded={expanded} setExpanded={setExpanded}>
           {sidebarItems.map((item) => (
             <SidebarItem
