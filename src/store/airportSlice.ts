@@ -3,6 +3,7 @@ import axios from "axios";
 import type {Pagination} from "../types/pagination.ts";
 import type {Airport} from "../types/airport.ts";
 import {API_PATHS} from "../utility/apiPaths.ts";
+import toast from "react-hot-toast";
 
 interface IStateAirport {
   pagination: Pagination | null,
@@ -24,6 +25,7 @@ const doGetAirports = createAsyncThunk('fetchAirports',
       const response = await axios.get(API_PATHS.GET_AIRPORTS);
       return response.data;
     }catch (error) {
+      toast.error("Unable to retrieve airports. Try again later.");
       console.error(error)
     }
   }

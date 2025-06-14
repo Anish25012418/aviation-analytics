@@ -6,12 +6,16 @@ import {doGetFlights} from "../store/flightSlice.ts";
 import type {SearchParams} from "../types/searchParams.ts";
 import type {Flight} from "../types/flight.ts";
 import {AutocompleteInput} from "../components/input/AutocompleteInput.tsx";
+import {Loader} from "lucide-react";
+import {useNavigate} from "react-router-dom";
 
 const FlightsPage = () => {
   const flights = useAppSelector(state => state.flights.flights);
   const airports = useAppSelector(state => state.airports.airports);
   const airlines = useAppSelector(state => state.airlines.airlines);
+  const isLoading = useAppSelector(state => state.flights.isLoading);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const [allFilteredFlights, setAllFilteredFlights] = useState<Flight[]>([]);
 
@@ -60,6 +64,17 @@ const FlightsPage = () => {
     setAllFilteredFlights(flights);
   }, [flights]);
 
+  useEffect(() => {
+    if (!isLoading) return; // if not loading, no timeout needed
+
+    const timeoutId = setTimeout(() => {
+      navigate("/");
+    }, 5000);
+
+    // cleanup if loading finishes before 10 seconds
+    return () => clearTimeout(timeoutId);
+  }, [isLoading, navigate]);
+
   const handleFilterChange = (name: string, value: string) => {
     setFilters((prevState) => ({...prevState, [name]: value}));
   }
@@ -91,6 +106,14 @@ const FlightsPage = () => {
     })
     setAllFilteredFlights(flights);
     setCurrentPage(1);
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <Loader className="size-8 text-indigo-500 animate-spin"/>
+      </div>
+    );
   }
 
   return (
@@ -169,7 +192,7 @@ const FlightsPage = () => {
           <tr>
             <th className="w-[10%] p-3 text-sm font-semibold tracking-wide text-left">Date</th>
             <th className="w-[15%] p-3 text-sm font-semibold tracking-wide text-left">Airline</th>
-            <th className="w-[10%] p-3 text-sm font-semibold tracking-wide text-left">Flight No.</th>
+            <th className="w-[10%] p-3 text-sm font-semibold tracking-wide text-left">Flight</th>
             <th className="w-[25%] p-3 text-sm font-semibold tracking-wide text-left">Departure</th>
             <th className="w-[25%] p-3 text-sm font-semibold tracking-wide text-left">Arrival</th>
             <th className="w-[15%] p-3 text-sm font-semibold tracking-wide text-left">Status</th>
